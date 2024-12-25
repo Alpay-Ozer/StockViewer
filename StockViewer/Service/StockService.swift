@@ -66,5 +66,38 @@ class StockService: StockProtocol {
                 let decodeResponse = try JSONDecoder().decode(StockDetailModel.self, from: data)
                 
                 return decodeResponse
-            }
+    }
+    
+    func newsSentiment() async throws -> NewsModel {
+        guard let url = URL(string: "https://www.alphavantage.co/query?function=NEWS_SENTIMENT&apikey=\(Constants.API_KEY)")
+           else {  throw URLError(.badURL) }
+        
+        let(data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let response = response as?HTTPURLResponse,
+              response.statusCode == 200
+        else {
+            throw URLError(.badServerResponse)
+        }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print(jsonString)
+        }
+        let decodedResponse = try JSONDecoder().decode(NewsModel.self, from: data)
+        return decodedResponse
+    }
+    
+    func exchange(fromCurrency:String, toCurrency:String) async throws -> ExchangeModel {
+        guard let url = URL(string: "https://api.polygon.io/v2/aggs/ticker/C:\(fromCurrency + toCurrency)/prev?adjusted=true&apiKey=\(Constants.POLYGON_API_KEY)")
+        else {throw URLError(.badURL)}
+        
+        let(data, response) = try await URLSession.shared.data(from:url)
+        
+        guard let response = response as? HTTPURLResponse,
+              response.statusCode == 200
+        else {throw URLError(.badServerResponse)}
+        
+        let decodedResponse = try JSONDecoder().decode(ExchangeModel.self, from: data)
+        return decodedResponse
+    }
+    
 }
